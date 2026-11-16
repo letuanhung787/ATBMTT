@@ -17,15 +17,15 @@ class TinyA51Cipher:
     def _get_majority(self, c1: int, c2: int, c3: int) -> int: # Hàm tính bit đa số trả về một bit chiếm đa số
         return 1 if (c1 + c2 + c3) >= 2 else 0 # Nếu tổng ba bit từ 2 trở lên trả về 1 còn lại trả về 0
     def _clock_r1(self) -> int: # Khởi tạo hàm dịch thanh ghi r1 một lần (R1 có 6 bit)
-        feedback = self.r1[2] ^ self.r1[5]  # Bit phản hồi : Lấy bit ở vị trí 2 XOR với bit ở vị trí 5   
+        feedback = self.r1[2] ^  self.r1[4] ^ self.r1[5]  # Bit phản hồi : Lấy bit ở vị trí 2 XOR với bit ở vị trí 4 XOR với bit ở vị trí 5   
         self.r1 = [feedback] + self.r1[:-1] # bit của r1 mới sẽ là : bit đầu : bit phản hồi vừa tính ; những bit còn lại sẽ bỏ bit cuối, dịch tất cả các bit sang phải 1 vị trí
          return feedback # Trả về bit phản hồi để ghi vào log
-    def _clock_r2(self) -> int: # Tương tự R1 nhưng bit phản hồi sử dụng bit ở vị trí 4 và 7 (R2 có 8 bit)
-        feedback = self.r2[4] ^ self.r2[7] 
+    def _clock_r2(self) -> int: # Tương tự R1 nhưng bit phản hồi sử dụng bit ở vị trí 6 và 7 (R2 có 8 bit)
+        feedback = self.r2[6] ^ self.r2[7] 
         self.r2 = [feedback] + self.r2[:-1]
         return feedback
-    def _clock_r3(self) -> int: # Tương tự R1 nhưng bit phản hồi sử dụng bit ở vị trí 5 và 8 (R3 có 9 bit)
-        feedback = self.r3[5] ^ self.r3[8]
+    def _clock_r3(self) -> int: # Tương tự R1 nhưng bit phản hồi sử dụng bit ở vị trí 2, 7 và 8 (R3 có 9 bit)
+        feedback = self.r3[2] ^ self.r3[7] ^ self.r3[8]
         self.r3 = [feedback] + self.r3[:-1]
         return feedback
     def step_verbose(self, step_number: int) -> tuple[int, dict]: # Khởi tạo hàm sinh dòng khóa dùng để khai báo một phương thức thực hiện 1 nhịp và xuất ra thông tin chi tiết (verbose) về trạng thái bên trong của nhịp đó
