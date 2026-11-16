@@ -7,15 +7,15 @@ class TinyA51Cipher:
       - R3: 9 bits  (Clock bit: R3[3], Taps feedback: R3[5] ^ R3[8])
     """
     def __init__(self, r1_init: list[int], r2_init: list[int], r3_init: list[int]): #Khởi tạo trạng thái ban đầu cho 3 thanh ghi dạng mảng bit 0/1
-        for bits, length in ((r1_init, 6), (r2_init, 8), (r3_init, 9)): # Vòng lặp kiểm tra lần lượt 3 thanh ghi bits = r1 số nguyên độ dài 6 còn lại tg tự
-            if len(bits) != length or any(bit not in (0, 1) for bit in bits): # Kiểm tra hai điều kiện số lượng bit dúng khoogn ? Có ít nhất một giá trị 0 hoặc 1 không?
+        for bits, length in ((r1_init, 6), (r2_init, 8), (r3_init, 9)):             # Vòng lặp kiểm tra lần lượt 3 thanh ghi bits = r1 số nguyên độ dài 6 còn lại tg tự
+            if len(bits) != length or any(bit not in (0, 1) for bit in bits):       # Kiểm tra hai điều kiện số lượng bit dúng không ? Có ít nhất một giá trị 0 hoặc 1 không?
                 raise ValueError(f"Register must contain exactly {length} bits") # Nếu phát hiện lỗi chương trình báo lỗi 
         self.r1 = list(r1_init)
         self.r2 = list(r2_init)
         self.r3 = list(r3_init) # Ba dòng này sao chép trạng thái ban đầu vào các thuộc tính của đối tượng.
         
     def _get_majority(self, c1: int, c2: int, c3: int) -> int: # Hàm tính bit đa số trả về một bit chiếm đa số
-        return 1 if (c1 + c2 + c3) >= 2 else 0 # Nếu tổng ba bit từ 2 trở lên trả về 1 còn lại trả về 0
+        return 1 if (c1 + c2 + c3) >= 2 else 0                 # Nếu tổng ba bit từ 2 trở lên trả về 1 còn lại trả về 0
     def _clock_r1(self) -> int: # Khởi tạo hàm dịch thanh ghi r1 một lần (R1 có 6 bit)
         feedback = self.r1[2] ^ self.r1[4] ^ self.r1[5]  # Bit phản hồi : Lấy bit ở vị trí 2 XOR với bit ở vị trí 4 XOR với bit ở vị trí 5   
         self.r1 = [feedback] + self.r1[:-1] # bit của r1 mới sẽ là : bit đầu : bit phản hồi vừa tính ; những bit còn lại sẽ bỏ bit cuối, dịch tất cả các bit sang phải 1 vị trí
