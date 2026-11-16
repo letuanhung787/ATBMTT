@@ -15,7 +15,7 @@ class TinyA51Cipher:
         self.r3 = list(r3_init) # Ba dòng này sao chép trạng thái ban đầu vào các thuộc tính của đối tượng.
         
     def _get_majority(self, c1: int, c2: int, c3: int) -> int: # Hàm tính bit đa số trả về một bit chiếm đa số
-        return 1 if (c1 + c2 + c3) >= 2 else 0 # Nếu tổng ba bit từ 2 trở lên trả về 1 còn lại trả về 0
+        return 1 if (c1 + c2 + c3) >= 2 else 0                 # Nếu tổng ba bit từ 2 trở lên trả về 1 còn lại trả về 0
     def _clock_r1(self) -> int: # Khởi tạo hàm dịch thanh ghi r1 một lần (R1 có 6 bit)
         feedback = self.r1[2] ^ self.r1[4] ^ self.r1[5]  # Bit phản hồi : Lấy bit ở vị trí 2 XOR với bit ở vị trí 4 XOR với bit ở vị trí 5   
         self.r1 = [feedback] + self.r1[:-1] # bit của r1 mới sẽ là : bit đầu : bit phản hồi vừa tính ; những bit còn lại sẽ bỏ bit cuối, dịch tất cả các bit sang phải 1 vị trí
