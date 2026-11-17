@@ -86,12 +86,4 @@ Mã nguồn được quản lý bằng **Git và GitHub**. Có thể xem lịch 
 
 **[Lịch sử commit của dự án](https://github.com/playforfreeinhere/ATBMTT/commits/main/)**
 
-Mỗi thành viên nên thực hiện thay đổi bằng tài khoản GitHub của mình và tạo commit với thông điệp rõ ràng, ví dụ:
-
-```bash
-git add .
-git commit -m "docs: update installation instructions"
-git push
-```
-
 ---
