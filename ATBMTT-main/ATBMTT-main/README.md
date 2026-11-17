@@ -150,6 +150,6 @@ Bản một file chạy đồng bộ, phù hợp demo văn bản và file nhỏ.
 
 Giao diện web theo mẫu PDF (bản mới)
 -----------------------------------
-Nhấp đúp **`giao_dien.html`** hoặc `chay_web.bat`: chạy offline trên Chrome/Edge, không cần Python. Có các khung mã hóa/giải mã màu tím, kết quả xanh và visualizer Trước/Phát/Tiếp như Hình 3–5 của PDF. Giữ cả chế độ nhị phân, văn bản và file, cho TinyA5/1 lẫn A5/1 đầy đủ.
+Nhấp đúp **`giao_dien.html`** hoặc **`chay.bat`**: chạy offline trên Chrome/Edge, không cần Python. Có các khung mã hóa/giải mã màu tím, kết quả xanh và visualizer Trước/Phát/Tiếp như Hình 3–5 của PDF. Giữ cả chế độ nhị phân, văn bản và file, cho TinyA5/1 lẫn A5/1 đầy đủ.
 
 **Quan trọng:** Tiny của bản HTML theo đặc tả Chương 4 PDF: clock 1/3/3, tap X=2/4/5, Y=6/7, Z=2/7/8, lấy S sau khi quay. Ví dụ khóa `10010101001110100110000` mã hóa `111` thành `011`. Nó khác biến thể của CLI/Tkinter cũ; không trộn bản mã giữa các phiên bản. [Chi tiết đặc tả, nguồn tham khảo và cách kiểm thử](docs/giao_dien_web.md).
