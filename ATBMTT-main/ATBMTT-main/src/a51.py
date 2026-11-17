@@ -24,7 +24,7 @@ class A51Cipher:
     # Định nghĩa hàm dịch R1,R2,R3 một nhịp 
     def _clock_r1(self):
         feedback = self.r1[18] ^ self.r1[17] ^ self.r1[16] ^ self.r1[13]
-        # Tính bit phản hồi bằng PP XOR các bit có vị trí tại 18, 17, 13 
+        # Tính bit phản hồi bằng PP XOR các bit có vị trí tại 18, 17, 16, 13 
         self.r1 = [feedback] + self.r1[:-1]
         # Trả về kết quả là danh sách chứa các bit mới nối với danh sách lấy các bit (đã dịch phải) và bỏ đi trừ bit cuối
         # VD: Các bit dịch chuyển sang phải 1 đơn vị; bit cuối bị loại bỏ và bit đầu thay thế bằng feedback; độ dài thanh ghi giữ nguyên
