@@ -16,7 +16,7 @@
 | `src/a51.py` | Lõi A5/1 Python. |
 | `ui/binary.py`, `ui/gui.py`, `ui/cli.py` | Chế độ tính bit, giao diện Tkinter cũ và CLI. |
 
-**Chạy giao diện web chính:** mở `giao_dien.html` bằng Chrome/Edge hoặc trên Windows nhấp đúp `chay.bat` / `chay_web.bat`. Có thể chạy `py run_gui.py` để mở tệp HTML trong trình duyệt. Để mở giao diện Tkinter cũ, chạy `py run_gui.py --desktop` (cần Python và Tkinter).
+**Chạy giao diện web chính:** mở `giao_dien.html` bằng Chrome/Edge hoặc trên Windows nhấp đúp `chay.bat` (trong thư mục dự án hoặc ở thư mục ngoài cùng của repository). Có thể chạy `py run_gui.py` để mở tệp HTML trong trình duyệt. Để mở giao diện Tkinter cũ, chạy `py run_gui.py --desktop` (cần Python và Tkinter).
 
 Bản HTML đã ghép **không cần** Python, Flask, npm, tài khoản hoặc Internet khi sử dụng. Nếu máy chặn việc mở tệp `file://`, có thể chạy `py -m http.server 8000` tại thư mục dự án rồi truy cập `http://localhost:8000/giao_dien.html`.
 
