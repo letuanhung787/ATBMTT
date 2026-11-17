@@ -1,6 +1,6 @@
 # ATBMTT — Hệ mã dòng A5/1 và TinyA5/1
 
-Dự án môn **An toàn và Bảo mật thông tin** — **Nhóm 9**. Chương trình minh họa mã hóa và giải mã bằng A5/1 và TinyA5/1, có giao diện web, mô phỏng thanh ghi và bộ kiểm thử.
+An toàn và Bảo mật thông tin — Nhóm 9. Chương trình minh họa mã hóa và giải mã bằng A5/1 và TinyA5/1, có giao diện web, mô phỏng thanh ghi và bộ kiểm thử.
 
 ## 1. Thành viên nhóm
 
@@ -15,9 +15,7 @@ Dự án môn **An toàn và Bảo mật thông tin** — **Nhóm 9**. Chương 
 - Xử lý chuỗi bit, văn bản UTF-8 và file.
 - Mô phỏng các bước dịch thanh ghi, tính majority và tạo dòng khóa.
 - Kiểm thử và đối chiếu kết quả thuật toán.
-
-*Dự án chỉ phục vụ mục đích học tập, không dùng để bảo vệ dữ liệu thực tế.*
-
+  
 ## 3. Cấu trúc mã nguồn
 
 ```text
@@ -41,7 +39,7 @@ ATBMTT/
 
 ## 4. Yêu cầu môi trường và cài đặt
 
-**Cách đơn giản nhất:** sử dụng **Windows và Chrome/Edge** để chạy giao diện HTML, không cần cài Python hay thư viện bổ sung.
+Sử dụng **Windows và Chrome/Edge** để chạy giao diện HTML, không cần cài Python hay thư viện bổ sung.
 
 Nếu muốn chạy bằng Python hoặc kiểm thử mã nguồn, sử dụng **Python 3.10+**. Tải dự án bằng Git hoặc chọn **Code → Download ZIP** trên GitHub:
 
@@ -59,12 +57,11 @@ py -m pip install -r requirements.txt
 
 ## 5. Hướng dẫn chạy chương trình
 
-**Cách 1 — Windows (khuyến nghị):**
+**Cách 1 — Windows:**
 
-Tại thư mục ngoài cùng của dự án, nhấp đúp **`chay.bat`**. Trình duyệt sẽ mở giao diện mã hóa và giải mã.
+Tải file zip ATBMTT, sau đó extract tất cả file, rồi nhấp vào **`chay.bat`** trong file đã extract. Giao diện sẽ hiện lên và chúng ta có thể mã hóa và giải mã theo mong muốn
 
 **Cách 2 — Python:**
-
 Tại thư mục ngoài cùng của dự án, chạy:
 
 ```powershell
