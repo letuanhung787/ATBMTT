@@ -6,7 +6,7 @@ from tkinter import filedialog, messagebox, ttk
 from tkinter.scrolledtext import ScrolledText
 
 from src.a51 import A51Cipher
-from src.tiny_a51 import TinyA51
+from src.tiny_a51 import TinyA51Cipher
 from ui.binary import process_binary, format_trace
 
 
@@ -23,7 +23,21 @@ def parse_unsigned(value: str, bits: int, label: str) -> int:
 
 def make_cipher(algorithm: str, key: str, frame: str):
     if algorithm == 'TinyA5/1':
-        return TinyA51(parse_unsigned(key, 32, 'Khóa TinyA5/1')).encrypt
+        bits = key.strip()
+        if len(bits) != 23 or any(bit not in '01' for bit in bits):
+            raise ValueError('Khóa TinyA5/1 phải có đúng 23 bit 0/1.')
+        state = [int(bit) for bit in bits]
+        cipher = TinyA51Cipher(state[:6], state[6:14], state[14:])
+        def process(data):
+            output = bytearray()
+            for byte in data:
+                mask = 0
+                for _ in range(8):
+                    bit, _ = cipher.step_verbose(0)
+                    mask = (mask << 1) | bit
+                output.append(byte ^ mask)
+            return bytes(output)
+        return process
     if algorithm != 'A5/1':
         raise ValueError('Thuật toán không hợp lệ.')
     number = parse_unsigned(key, 64, 'Khóa A5/1')
@@ -69,136 +83,126 @@ class CipherApp:
         self.executor = ThreadPoolExecutor(max_workers=1)
         self.future = None
         self.pending_kind = None
-        self.root.title('A5/1 & TinyA5/1 — Nhóm 9')
-        self.root.geometry('1040x850')
-        self.root.minsize(740, 600)
-        self.root.protocol('WM_DELETE_WINDOW', self.close)
-        self.algorithm = tk.StringVar(value='TinyA5/1')
-        self.key = tk.StringVar(value='0x1A2B3C4D')
-        self.frame = tk.StringVar(value='0x134')
-        self.status = tk.StringVar(value='Sẵn sàng. Nhập văn bản rồi chọn Mã hóa.')
-        self.hint = tk.StringVar()
-        self.source = tk.StringVar()
-        self.target = tk.StringVar()
         self.buttons = []
-        container = ttk.Frame(root, padding=20)
-        container.pack(fill='both', expand=True)
-        ttk.Label(container, text='HỆ MÃ DÒNG A5/1 & TINYA5/1',
-                  font=('Segoe UI', 18, 'bold')).pack(anchor='w')
-        ttk.Label(container, text='Nhị phân từng bước • Văn bản UTF-8 • File • Nhóm 9').pack(anchor='w', pady=(4, 16))
-        settings = ttk.LabelFrame(container, text='Thiết lập khóa', padding=12)
-        settings.pack(fill='x')
-        ttk.Label(settings, text='Thuật toán').grid(row=0, column=0, sticky='w')
-        combo = ttk.Combobox(settings, textvariable=self.algorithm,
-                             values=('TinyA5/1', 'A5/1'), state='readonly', width=14)
-        combo.grid(row=1, column=0, padx=(0, 16), pady=5)
-        combo.bind('<<ComboboxSelected>>', self.update_algorithm)
-        ttk.Label(settings, text='Khóa (thập phân hoặc 0x...)').grid(row=0, column=1, sticky='w')
-        ttk.Entry(settings, textvariable=self.key, width=28).grid(row=1, column=1, sticky='ew', padx=(0, 16))
-        ttk.Label(settings, text='Số khung (A5/1)').grid(row=0, column=2, sticky='w')
-        self.frame_entry = ttk.Entry(settings, textvariable=self.frame, width=16)
-        self.frame_entry.grid(row=1, column=2)
-        settings.columnconfigure(1, weight=1)
-        ttk.Label(settings, textvariable=self.hint, wraplength=800).grid(row=2, column=0, columnspan=3, sticky='w')
-        tabs = ttk.Notebook(container)
-        tabs.pack(fill='both', expand=True, pady=14)
-        text_tab = ttk.Frame(tabs, padding=12)
-        file_tab = ttk.Frame(tabs, padding=12)
-        self.build_binary_tab(tabs)
-        tabs.add(text_tab, text='  Văn bản  ')
-        tabs.add(file_tab, text='  File  ')
-        ttk.Label(text_tab, text='Đầu vào: văn bản UTF-8 để mã hóa / chuỗi hex để giải mã').pack(anchor='w')
-        self.input = ScrolledText(text_tab, height=6, wrap='word', font=('Consolas', 11))
-        self.input.pack(fill='both', expand=True, pady=6)
-        self.input.insert('1.0', 'Xin chào! Đây là demo hệ mã dòng A5/1 — Nhóm 9.')
-        actions = ttk.Frame(text_tab)
-        actions.pack(fill='x', pady=5)
-        self.button(actions, 'Mã hóa → Hex', lambda: self.run_text(False)).pack(side='left', padx=(0, 8))
-        self.button(actions, 'Giải mã → Văn bản', lambda: self.run_text(True)).pack(side='left', padx=(0, 8))
-        self.button(actions, 'Đưa kết quả lên đầu vào', self.reuse_result).pack(side='left')
-        ttk.Label(text_tab, text='Kết quả').pack(anchor='w', pady=(8, 0))
-        self.output = ScrolledText(text_tab, height=6, wrap='word', font=('Consolas', 11), state='disabled')
-        self.output.pack(fill='both', expand=True, pady=6)
-        self.button(text_tab, 'Sao chép kết quả', self.copy_result).pack(anchor='e')
-        ttk.Label(file_tab, text='Chọn file bất kỳ: văn bản, ảnh hoặc dữ liệu nhị phân.').pack(anchor='w', pady=(0, 14))
-        for label, variable, callback in [('File đầu vào', self.source, self.choose_source),
-                                          ('File đầu ra mới', self.target, self.choose_target)]:
-            ttk.Label(file_tab, text=label).pack(anchor='w')
-            row = ttk.Frame(file_tab)
-            row.pack(fill='x', pady=(5, 14))
-            ttk.Entry(row, textvariable=variable).pack(side='left', fill='x', expand=True)
-            self.button(row, 'Chọn…', callback).pack(side='left', padx=(8, 0))
-        row = ttk.Frame(file_tab)
-        row.pack(fill='x')
-        self.button(row, 'Mã hóa file', lambda: self.run_file(False)).pack(side='left', padx=(0, 8))
-        self.button(row, 'Giải mã file', lambda: self.run_file(True)).pack(side='left')
-        ttk.Label(file_tab, text='Giải mã bằng đúng thuật toán, khóa và số khung lúc mã hóa.\n'
-                  'File mã hóa là dữ liệu nhị phân; chương trình không ghi đè file đã có.',
-                  wraplength=750).pack(anchor='w', pady=20)
-        ttk.Label(container, textvariable=self.status, wraplength=850).pack(anchor='w')
-        ttk.Label(container, text='Chỉ dùng cho học tập. Các hệ mã này không xác thực dữ liệu; '
-                  'khóa sai có thể không được phát hiện.', wraplength=850).pack(anchor='w', pady=(8, 0))
-        self.update_algorithm()
-
-    def build_binary_tab(self, tabs):
-        tab = ttk.Frame(tabs, padding=12)
-        tabs.add(tab, text='  Nhị phân / Tính tay  ')
-        self.binary_algorithm = tk.StringVar(value='TinyA5/1')
-        self.binary_key = tk.StringVar(value='10110001010110110010101')
-        self.binary_frame = tk.StringVar(value=format(0x134, '022b'))
+        root.title('Nhóm 9 — TinyA5/1 và A5/1')
+        root.geometry('1100x820')
+        root.minsize(740, 600)
+        root.protocol('WM_DELETE_WINDOW', self.close)
+        self.algorithm = tk.StringVar(value='TinyA5/1')
+        self.key = tk.StringVar(value='10010101001110100110000')
+        self.frame = tk.StringVar(value='0x134')
+        self.hint = tk.StringVar()
+        self.status = tk.StringVar(value='Sẵn sàng.')
+        self.binary_algorithm = self.algorithm
+        self.binary_key = self.key
+        self.binary_frame = self.frame
         self.binary_result = ''
-        self.binary_hint = tk.StringVar()
-        row = ttk.Frame(tab)
-        row.pack(fill='x')
-        ttk.Label(row, text='Thuật toán').pack(side='left', padx=(0, 8))
-        combo = ttk.Combobox(row, textvariable=self.binary_algorithm,
-                             values=('TinyA5/1', 'A5/1'), state='readonly', width=16)
-        combo.pack(side='left')
-        combo.bind('<<ComboboxSelected>>', self.update_binary_algorithm)
-        self.button(row, 'Nạp ví dụ', self.load_binary_example).pack(side='left', padx=10)
-        ttk.Label(tab, textvariable=self.binary_hint, wraplength=900).pack(anchor='w', pady=6)
-        ttk.Label(tab, text='Khóa nhị phân: Tiny 23 bit / A5/1 64 bit').pack(anchor='w')
-        ttk.Entry(tab, textvariable=self.binary_key).pack(fill='x', pady=4)
-        ttk.Label(tab, text='Số khung nhị phân 22 bit (chỉ A5/1)').pack(anchor='w')
-        self.binary_frame_entry = ttk.Entry(tab, textvariable=self.binary_frame)
-        self.binary_frame_entry.pack(fill='x', pady=4)
-        ttk.Label(tab, text='Đầu vào: chuỗi bit 0/1 (tối đa 4096 bit)').pack(anchor='w')
-        self.binary_input = ScrolledText(tab, height=3, wrap='word', font=('Consolas', 10))
-        self.binary_input.pack(fill='x', pady=4)
-        self.binary_input.insert('1.0', '1011')
-        row = ttk.Frame(tab)
-        row.pack(fill='x', pady=5)
-        self.button(row, 'Mã hóa bit', lambda: self.run_binary(False)).pack(side='left', padx=(0, 8))
-        self.button(row, 'Giải mã bit', lambda: self.run_binary(True)).pack(side='left', padx=(0, 8))
-        self.button(row, 'Đưa bản mã lên đầu vào', self.reuse_binary).pack(side='left')
-        self.binary_output = ScrolledText(tab, height=4, wrap='word', font=('Consolas', 10), state='disabled')
-        self.binary_output.pack(fill='x', pady=4)
-        ttk.Label(tab, text='Các bước trung gian: trạng thái trước → sau, majority và dòng khóa S').pack(anchor='w')
-        self.binary_trace = ScrolledText(tab, height=8, wrap='none', font=('Consolas', 10), state='disabled')
-        self.binary_trace.pack(fill='both', expand=True, pady=4)
-        self.update_binary_algorithm()
+        panel = ttk.Frame(root, padding=16)
+        panel.pack(fill='both', expand=True)
+        ttk.Label(panel, text='HỆ MÃ DÒNG — NHÓM 9',
+                  font=('Segoe UI', 18, 'bold')).pack(anchor='w')
+        row = ttk.Frame(panel)
+        row.pack(fill='x', pady=10)
+        self.selector = ttk.Combobox(row, textvariable=self.algorithm,
+                                    values=('TinyA5/1', 'A5/1'), state='readonly', width=13)
+        self.selector.pack(side='left')
+        self.selector.bind('<<ComboboxSelected>>', self.example)
+        ttk.Label(row, text=' Khóa: ').pack(side='left')
+        ttk.Entry(row, textvariable=self.key, width=34).pack(side='left')
+        ttk.Label(row, text=' Frame: ').pack(side='left')
+        self.frame_entry = ttk.Entry(row, textvariable=self.frame, width=12)
+        self.frame_entry.pack(side='left')
+        self.binary_frame_entry = self.frame_entry
+        self.button(row, 'Nạp ví dụ', self.example).pack(side='left', padx=8)
+        ttk.Label(panel, textvariable=self.hint, wraplength=1050).pack(anchor='w')
+        self.tabs = ttk.Notebook(panel)
+        self.tabs.pack(fill='both', expand=True, pady=10)
+        self.inputs, self.outputs = {}, {}
+        for mode, title in [('bit', 'Nhị phân / Tính tay'), ('text', 'Văn bản / File')]:
+            tab = ttk.Frame(self.tabs, padding=10)
+            self.tabs.add(tab, text=title)
+            ttk.Label(tab, text='Đầu vào: chuỗi 0/1 (tối đa 4096 bit)' if mode == 'bit'
+                      else 'Đầu vào: văn bản UTF-8 / bản mã hex').pack(anchor='w')
+            entry = ScrolledText(tab, height=4, wrap='word', font=('Consolas', 10))
+            entry.pack(fill='both', expand=True, pady=5)
+            self.inputs[mode] = entry
+            actions = ttk.Frame(tab)
+            actions.pack(fill='x')
+            self.button(actions, 'Mã hóa', lambda m=mode: self.run(m, False)).pack(side='left', padx=(0, 8))
+            self.button(actions, 'Giải mã', lambda m=mode: self.run(m, True)).pack(side='left', padx=(0, 8))
+            self.button(actions, 'Đưa kết quả lên đầu vào', lambda m=mode: self.reuse(m)).pack(side='left')
+            ttk.Label(tab, text='Kết quả').pack(anchor='w', pady=(8, 0))
+            output = ScrolledText(tab, height=4, wrap='word', font=('Consolas', 10), state='disabled')
+            output.pack(fill='both', expand=True, pady=5)
+            self.outputs[mode] = output
+            if mode == 'bit':
+                ttk.Label(tab, text='Các bước: thanh ghi trước → sau; clock; majority; dòng khóa S').pack(anchor='w')
+                self.binary_trace = ScrolledText(tab, height=7, wrap='none',
+                                                font=('Consolas', 10), state='disabled')
+                self.binary_trace.pack(fill='both', expand=True)
+            else:
+                row = ttk.Frame(tab)
+                row.pack(fill='x', pady=8)
+                self.button(row, 'Mã hóa file...', lambda: self.run_file(False)).pack(side='left', padx=(0, 8))
+                self.button(row, 'Giải mã file...', lambda: self.run_file(True)).pack(side='left')
+        self.input, self.output = self.inputs['text'], self.outputs['text']
+        self.binary_input, self.binary_output = self.inputs['bit'], self.outputs['bit']
+        ttk.Label(panel, textvariable=self.status, wraplength=1050).pack(anchor='w')
+        self.example()
+        self.tabs.select(1)
 
-    def update_binary_algorithm(self, event=None):
-        tiny = self.binary_algorithm.get() == 'TinyA5/1'
-        self.binary_frame_entry.configure(state='disabled' if tiny else 'normal')
-        self.binary_hint.set('Tiny 6/8/9 bit: khóa = R1 || R2 || R3 (index 0 trước); lấy S trước khi quay. '
-                             'Chưa xác nhận biến thể của lớp.' if tiny else
-                             'A5/1 19/22/23 bit: nạp khóa và frame, quay khởi động 100 lần; bảng bắt đầu khi sinh S.')
+    @staticmethod
+    def set_output(widget, value):
+        widget.configure(state='normal')
+        widget.delete('1.0', 'end')
+        widget.insert('1.0', value)
+        widget.configure(state='disabled')
+
+    def example(self, event=None):
+        if self.future is not None:
+            return
+        tiny = self.algorithm.get() == 'TinyA5/1'
+        self.key.set('10010101001110100110000' if tiny else '0x1223456789ABCDEF')
+        self.frame.set('0x134')
+        self.update_algorithm()
+        for mode, value in [('bit', '111' if tiny else '0' * 114), ('text', 'Xin chào Việt Nam!')]:
+            self.inputs[mode].delete('1.0', 'end')
+            self.inputs[mode].insert('1.0', value)
+            self.set_output(self.outputs[mode], '')
+        self.set_output(self.binary_trace, '')
+        self.binary_result = ''
+        self.status.set('Đã nạp ví dụ. Tiny: 111 → 011 → 111; A5/1: vector chuẩn với bản rõ toàn 0.')
 
     def load_binary_example(self):
-        tiny = self.binary_algorithm.get() == 'TinyA5/1'
-        self.binary_key.set('10110001010110110010101' if tiny else format(0x1223456789ABCDEF, '064b'))
-        self.binary_frame.set(format(0x134, '022b'))
-        self.binary_input.delete('1.0', 'end')
-        self.binary_input.insert('1.0', '1011' if tiny else '0' * 114)
-        self.binary_result = ''
-        self.update_binary_algorithm()
-        self.status.set('Đã nạp ví dụ: Tiny S=1001, kết quả=0010; A5/1 là vector chuẩn với bản rõ toàn 0.')
+        self.example()
+
+    def update_binary_algorithm(self, event=None):
+        self.update_algorithm(event)
+
+    def run(self, mode, decrypt):
+        if mode == 'bit':
+            self.run_binary(decrypt)
+        else:
+            self.run_text(decrypt)
 
     def run_binary(self, decrypt):
-        self.binary_direction = 'Bản rõ khôi phục' if decrypt else 'Bản mã'
-        self.submit('binary', process_binary, self.binary_algorithm.get(), self.binary_key.get(),
-                    self.binary_frame.get(), self.binary_input.get('1.0', 'end-1c'))
+        algorithm, key, frame = self.algorithm.get(), self.key.get(), self.frame.get()
+        try:
+            if algorithm == 'A5/1':
+                key = format(parse_unsigned(key, 64, 'Khóa A5/1'), '064b')
+                frame = format(parse_unsigned(frame, 22, 'Số khung'), '022b')
+        except ValueError as exc:
+            messagebox.showerror('Lỗi dữ liệu / khóa', str(exc), parent=self.root)
+            return
+        self.binary_direction = 'Bản rõ' if decrypt else 'Bản mã'
+        self.submit('binary', process_binary, algorithm, key, frame,
+                    self.binary_input.get('1.0', 'end-1c'))
+
+    def reuse(self, mode):
+        if mode == 'bit':
+            self.reuse_binary()
+        else:
+            self.reuse_result()
 
     def reuse_binary(self):
         if self.binary_result:
@@ -213,8 +217,8 @@ class CipherApp:
     def update_algorithm(self, event=None):
         full = self.algorithm.get() == 'A5/1'
         self.frame_entry.configure(state='normal' if full else 'disabled')
-        self.hint.set('A5/1: khóa 64 bit (8 byte), số khung 22 bit.' if full else
-                      'TinyA5/1: khóa 32 bit, biến thể minh họa thanh ghi 6/8/9 bit.')
+        self.hint.set('A5/1 19/22/23 bit: khóa 64 bit (thập phân hoặc 0x...), frame 22 bit; S lấy sau khi quay.'
+                      if full else 'Tiny 6/8/9 bit: khóa 23 bit = R1 || R2 || R3; clock 1/3/3; S lấy sau khi quay.')
 
     def submit(self, kind, function, *args):
         if self.future is not None:
@@ -263,21 +267,22 @@ class CipherApp:
                     self.input.get('1.0', 'end-1c'), decrypt)
 
     def run_file(self, decrypt):
-        if not self.source.get().strip() or not self.target.get().strip():
-            messagebox.showerror('Thiếu file', 'Hãy chọn file đầu vào và đầu ra.', parent=self.root)
+        if self.future is not None:
             return
-        self.submit('file', process_file, self.algorithm.get(), self.key.get(), self.frame.get(),
-                    self.source.get(), self.target.get())
-
-    def choose_source(self):
-        path = filedialog.askopenfilename(parent=self.root, title='Chọn file đầu vào')
-        if path:
-            self.source.set(path)
-
-    def choose_target(self):
-        path = filedialog.asksaveasfilename(parent=self.root, title='Chọn tên file đầu ra mới')
-        if path:
-            self.target.set(path)
+        source = filedialog.askopenfilename(parent=self.root, title='Chọn file để giải mã' if decrypt else 'Chọn file để mã hóa')
+        if not source:
+            return
+        name = Path(source).name
+        if decrypt:
+            name = name[:-4] if name.lower().endswith('.a51') else name + '.restored'
+            name = 'khoi_phuc_' + name
+        else:
+            name += '.a51'
+        target = filedialog.asksaveasfilename(parent=self.root, title='Chọn tên file đầu ra mới',
+                                             initialfile=name, confirmoverwrite=False)
+        if not target:
+            return
+        self.submit('file', process_file, self.algorithm.get(), self.key.get(), self.frame.get(), source, target)
 
     def reuse_result(self):
         self.input.delete('1.0', 'end')

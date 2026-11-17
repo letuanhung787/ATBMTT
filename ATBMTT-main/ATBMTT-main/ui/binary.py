@@ -56,7 +56,7 @@ def process_binary(algorithm: str, key: str, frame: str, data: str):
 
 def format_trace(rows) -> str:
     lines = ['Index thanh ghi tăng từ đầu nạp feedback (index 0) đến đầu ra.',
-             'TinyA5/1 lấy S trước khi quay; A5/1 lấy S sau khi quay.', '']
+             'TinyA5/1 và A5/1 lấy S sau khi quay.', '']
     for row in rows:
         lines.append(f"Bước {row['step']}: clock={row['clock_bits']}, majority={row['majority']}, "
                      f"quay={row['clocked']}")

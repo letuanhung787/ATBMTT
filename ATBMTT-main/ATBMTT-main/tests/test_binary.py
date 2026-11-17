@@ -2,20 +2,21 @@ import pytest
 
 from ui.binary import process_binary, format_trace
 
-KEY = '10110001010110110010101'
+KEY = '10010101001110100110000'
 
 
 def test_hand_calculation_and_trace():
-    result, stream, rows = process_binary('TinyA5/1', KEY, '', '1011')
-    assert result == '0010'
-    assert stream == '1001'
-    assert rows[0]['before'] == [[1, 0, 1, 1, 0, 0], [0, 1, 0, 1, 0, 1, 1, 0],
-                                  [1, 1, 0, 0, 1, 0, 1, 0, 1]]
-    assert rows[0]['clock_bits'] == (1, 1, 0)
-    assert rows[0]['majority'] == 1
+    # PDF pages 49–50, independent worked example: 111 XOR 100 = 011.
+    result, stream, rows = process_binary('TinyA5/1', KEY, '', '111')
+    assert result == '011'
+    assert stream == '100'
+    assert rows[0]['before'] == [[1, 0, 0, 1, 0, 1], [0, 1, 0, 0, 1, 1, 1, 0],
+                                  [1, 0, 0, 1, 1, 0, 0, 0, 0]]
+    assert rows[0]['clock_bits'] == (0, 0, 1)
+    assert rows[0]['majority'] == 0
     assert rows[0]['clocked'] == (True, True, False)
-    assert rows[0]['after'][0] == [1, 1, 0, 1, 1, 0]
-    assert process_binary('TinyA5/1', KEY, '', result)[0] == '1011'
+    assert rows[0]['after'][0] == [1, 1, 0, 0, 1, 0]
+    assert process_binary('TinyA5/1', KEY, '', result)[0] == '111'
     assert 'Bước 1' in format_trace(rows)
 
 

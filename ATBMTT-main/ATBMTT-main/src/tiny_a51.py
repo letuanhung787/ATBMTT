@@ -2,9 +2,9 @@ class TinyA51Cipher:
     """
     Lớp cài đặt core thuật toán TinyA5/1.
     Cấu trúc 3 thanh ghi LFSR:
-      - R1: 6 bits  (Clock bit: R1[2], Taps feedback: R1[2] ^ R1[5]) 
-      - R2: 8 bits  (Clock bit: R2[3], Taps feedback: R2[4] ^ R2[7])
-      - R3: 9 bits  (Clock bit: R3[3], Taps feedback: R3[5] ^ R3[8])
+      - R1: 6 bits  (Clock bit: R1[1], Taps feedback: R1[2] ^ R1[4] ^ R1[5])
+      - R2: 8 bits  (Clock bit: R2[3], Taps feedback: R2[6] ^ R2[7])
+      - R3: 9 bits  (Clock bit: R3[3], Taps feedback: R3[2] ^ R3[7] ^ R3[8])
     """
     def __init__(self, r1_init: list[int], r2_init: list[int], r3_init: list[int]): #Khởi tạo trạng thái ban đầu cho 3 thanh ghi dạng mảng bit 0/1
         for bits, length in ((r1_init, 6), (r2_init, 8), (r3_init, 9)): # Vòng lặp kiểm tra lần lượt 3 thanh ghi bits = r1 số nguyên độ dài 6 còn lại tg tự
@@ -19,7 +19,7 @@ class TinyA51Cipher:
     def _clock_r1(self) -> int: # Khởi tạo hàm dịch thanh ghi r1 một lần (R1 có 6 bit)
         feedback = self.r1[2] ^ self.r1[4] ^ self.r1[5]  # Bit phản hồi : Lấy bit ở vị trí 2 XOR với bit ở vị trí 4 XOR với bit ở vị trí 5   
         self.r1 = [feedback] + self.r1[:-1] # bit của r1 mới sẽ là : bit đầu : bit phản hồi vừa tính ; những bit còn lại sẽ bỏ bit cuối, dịch tất cả các bit sang phải 1 vị trí
-         return feedback # Trả về bit phản hồi để ghi vào log
+        return feedback # Trả về bit phản hồi để ghi vào log
     def _clock_r2(self) -> int: # Tương tự R1 nhưng bit phản hồi sử dụng bit ở vị trí 6 và 7 (R2 có 8 bit)
         feedback = self.r2[6] ^ self.r2[7] 
         self.r2 = [feedback] + self.r2[:-1]
@@ -30,11 +30,11 @@ class TinyA51Cipher:
         return feedback
     def step_verbose(self, step_number: int) -> tuple[int, dict]: # Khởi tạo hàm sinh dòng khóa dùng để khai báo một phương thức thực hiện 1 nhịp và xuất ra thông tin chi tiết (verbose) về trạng thái bên trong của nhịp đó
         """ Thực hiện 1 nhịp xử lý:
-          1. Lấy bit keystream S từ trạng thái hiện tại (R1[5] ^ R2[7] ^ R3[8]).
-          2. Tìm Majority bit từ 3 clock bit (R1[2], R2[3], R3[3]).
-          3. Dịch nhịp các thanh ghi khớp với Majority bit.
+          1. Tìm Majority bit từ 3 clock bit (R1[1], R2[3], R3[3]).
+          2. Dịch nhịp các thanh ghi khớp với Majority bit.
+          3. Lấy S từ trạng thái sau dịch (R1[5] ^ R2[7] ^ R3[8]).
           4. Trả về bit keystream và log trạng thái trung gian."""
-        c1, c2, c3 = self.r1[1], self.r2[3], self.r3[3] # Cú pháp gán đồng thời ba biến c1 = R1[2], c2 = R2[3], c3 = R3[3]
+        c1, c2, c3 = self.r1[1], self.r2[3], self.r3[3] # Cú pháp gán đồng thời ba biến c1 = R1[1], c2 = R2[3], c3 = R3[3]
         maj = self._get_majority(c1, c2, c3) # Tính và lưu lại bit chiếm đa số (majority) từ ba bit c1, c2, c3 
         # Xác định các thanh ghi cần dịch ( '==' : so sánh rồi trả về True hoặc False)
         clock_r1 = (c1 == maj) 
@@ -55,7 +55,7 @@ class TinyA51Cipher:
             "r1": list(self.r1), # Trạng thái sau dịch của từng bit
             "r2": list(self.r2),
             "r3": list(self.r3),
-            "keystream_bit": keystream_bit # Bit dòng khóa trước dịch
+            "keystream_bit": keystream_bit # Bit dòng khóa sau dịch
         }
         return keystream_bit, log_data # Trả về bit dòng khóa vừa dịch và thông tin chi tiết của bước hiện tại
     def generate_keystream(self, length: int) -> tuple[list[int], list[dict]]: # Khởi tạo một dòng khóa gồm length bit và sinh chuỗi dòng khóa gồm N bit và xuất lịch sử log

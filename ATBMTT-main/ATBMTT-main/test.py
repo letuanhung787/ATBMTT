@@ -21,10 +21,10 @@ def encrypt_file(input_path: str, output_path: str, key: int, frame: int):
 
 
 def run_tests():
-    cipher = TinyA51Cipher([1, 0, 1, 1, 0, 0], [0, 1, 0, 1, 0, 1, 1, 0],
-                           [1, 1, 0, 0, 1, 0, 1, 0, 1])
-    stream, _ = cipher.generate_keystream(4)
-    assert stream == [1, 0, 0, 1]
+    cipher = TinyA51Cipher([1, 0, 0, 1, 0, 1], [0, 1, 0, 0, 1, 1, 1, 0],
+                           [1, 0, 0, 1, 1, 0, 0, 0, 0])
+    stream, _ = cipher.generate_keystream(3)
+    assert stream == [1, 0, 0]
     print('PASS: TinyA5/1 teaching vector (6/8/9 bits)')
     plaintext = b'A5/1 Stream Cipher Implementation - FIT NEU 2026'
     key, frame = 0x123456789ABCDEF0, 0x123456

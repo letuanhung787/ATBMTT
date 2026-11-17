@@ -1,6 +1,6 @@
 # Giao diện web A5/1 & TinyA5/1 — tài liệu đối chiếu mã nguồn
 
-> Tài liệu cho giao diện chính `giao_dien.html`, đồng bộ với mã ở `ui/web/`, `src/`, `ui/` và các bộ kiểm thử trên nhánh `main`. Đây là chương trình minh họa thuật toán phục vụ học tập, không phải giải pháp bảo mật dữ liệu thực tế.
+> Giao diện mặc định hiện là cửa sổ Tkinter (`py run_gui.py` hoặc `chay.bat`). Mở web bằng `py run_gui.py --web`. Tài liệu dưới đây cho giao diện web `giao_dien.html`, đồng bộ với mã ở `ui/web/`, `src/`, `ui/` và các bộ kiểm thử trên nhánh `main`. Đây là chương trình minh họa thuật toán phục vụ học tập, không phải giải pháp bảo mật dữ liệu thực tế.
 
 ## 1. Thành phần mã nguồn và cách chạy
 
@@ -14,9 +14,9 @@
 | `ui/web/build.py` | Ghép bốn tệp web thành `giao_dien.html`. |
 | `src/tiny_a51.py` | Lõi TinyA5/1 Python dùng trong CLI và giao diện Tkinter. |
 | `src/a51.py` | Lõi A5/1 Python. |
-| `ui/binary.py`, `ui/gui.py`, `ui/cli.py` | Chế độ tính bit, giao diện Tkinter cũ và CLI. |
+| `ui/binary.py`, `ui/gui.py`, `ui/cli.py` | Chế độ tính bit, giao diện Tkinter và CLI. |
 
-**Chạy giao diện web chính:** mở `giao_dien.html` bằng Chrome/Edge hoặc trên Windows nhấp đúp `chay.bat` (trong thư mục dự án hoặc ở thư mục ngoài cùng của repository). Có thể chạy `py run_gui.py` để mở tệp HTML trong trình duyệt. Để mở giao diện Tkinter cũ, chạy `py run_gui.py --desktop` (cần Python và Tkinter).
+**Chạy giao diện web:** mở `giao_dien.html` bằng Chrome/Edge. `chay.bat` hiện mở Tkinter. Chạy `py run_gui.py --web` để mở tệp HTML trong trình duyệt. Để mở giao diện Tkinter, chạy `py run_gui.py --desktop` (cần Python và Tkinter).
 
 Bản HTML đã ghép **không cần** Python, Flask, npm, tài khoản hoặc Internet khi sử dụng. Nếu máy chặn việc mở tệp `file://`, có thể chạy `py -m http.server 8000` tại thư mục dự án rồi truy cập `http://localhost:8000/giao_dien.html`.
 
@@ -54,12 +54,12 @@ Ciphertext: 011
 Giải mã 011 với cùng khóa: 111
 ```
 
-**Đối chiếu với `src/tiny_a51.py`:** Theo các phép gán và lệnh thực thi trong `TinyA51Cipher.step_verbose()`, lõi Python hiện dùng **cùng vị trí clock, tap và phép XOR bit đầu ra sau quay** như lõi web. Một số chú thích/docstring trong các tệp Python còn ghi `R1[2]` hoặc «lấy S trước khi quay»; các câu đó **không khớp với lệnh đang thực thi**. Tài liệu này ghi theo phép gán và thứ tự lệnh, không lấy các chú thích mâu thuẫn làm đặc tả.
+**Đối chiếu với `src/tiny_a51.py`:** Theo các phép gán và lệnh thực thi trong `TinyA51Cipher.step_verbose()`, lõi Python hiện dùng **cùng vị trí clock, tap và phép XOR bit đầu ra sau quay** như lõi web. Các chú thích về clock, tap và thứ tự lấy S trong lõi Python đã được cập nhật theo các lệnh đang thực thi.
 
 Tuy vậy, **định dạng khóa không giống nhau ở mọi chế độ**:
 
 - Web ở cả ba tab: Tiny nhận **trạng thái 23 bit trực tiếp**; ở `ui/binary.py` của Tkinter cũng nhận trạng thái 23 bit trực tiếp.
-- `TinyA51(key)` trong Python (dùng cho CLI và tab văn bản/file của Tkinter cũ): nhận **số nguyên không dấu 32 bit**, chuyển thành trạng thái 23 bit bằng `(key & ((1 << 23) - 1)) ^ (key >> 23)`, sau đó tách bit **thấp trước** thành ba thanh ghi 6/8/9 bit.
+- `TinyA51(key)` trong Python (dùng cho CLI; giao diện Tkinter hiện dùng khóa 23 bit trực tiếp ở cả hai tab): nhận **số nguyên không dấu 32 bit**, chuyển thành trạng thái 23 bit bằng `(key & ((1 << 23) - 1)) ^ (key >> 23)`, sau đó tách bit **thấp trước** thành ba thanh ghi 6/8/9 bit.
 - Vì cách chuyển khóa khác nhau, **không nhập một giá trị khóa theo hai định dạng rồi mặc định sẽ có cùng dòng khóa**. Chỉ so sánh kết quả khi ba thanh ghi bắt đầu ở đúng cùng trạng thái.
 
 ### 2.2. A5/1 đầy đủ (64 bit)

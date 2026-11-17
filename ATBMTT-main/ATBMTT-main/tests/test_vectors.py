@@ -43,13 +43,14 @@ def test_a51_published_vector():
 
 
 def test_tiny_hand_vector():
-    cipher = TinyA51Cipher([1, 0, 1, 1, 0, 0], [0, 1, 0, 1, 0, 1, 1, 0],
-                           [1, 1, 0, 0, 1, 0, 1, 0, 1])
-    stream, logs = cipher.generate_keystream(4)
-    assert stream == [1, 0, 0, 1]
-    assert logs[0]['clock_bits'] == (1, 1, 0)
+    # The class now implements the PDF variant, output after clocking.
+    cipher = TinyA51Cipher([1, 0, 0, 1, 0, 1], [0, 1, 0, 0, 1, 1, 1, 0],
+                           [1, 0, 0, 1, 1, 0, 0, 0, 0])
+    stream, logs = cipher.generate_keystream(3)
+    assert stream == [1, 0, 0]
+    assert logs[0]['clock_bits'] == (0, 0, 1)
     assert logs[0]['clocked'] == (True, True, False)
-    assert logs[0]['r1'] == [1, 1, 0, 1, 1, 0]
+    assert logs[0]['r1'] == [1, 1, 0, 0, 1, 0]
 
 
 def test_reuse_attack():

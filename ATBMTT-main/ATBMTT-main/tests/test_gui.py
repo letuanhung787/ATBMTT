@@ -9,7 +9,7 @@ import pytest
 from ui.gui import CipherApp, make_cipher, process_file, process_text
 
 
-@pytest.mark.parametrize('algorithm,key', [('TinyA5/1', '0x1A2B3C4D'),
+@pytest.mark.parametrize('algorithm,key', [('TinyA5/1', '10010101001110100110000'),
                                           ('A5/1', '0x1223456789ABCDEF')])
 def test_text_and_binary_files(tmp_path, algorithm, key):
     text = 'Xin chào Việt Nam!\nDòng thứ hai 🔑'
@@ -99,3 +99,17 @@ def test_window_binary_roundtrip():
             assert app.binary_result == original
     finally:
         app.close()
+
+
+def test_shared_tiny_key_matches_binary_mode():
+    key = '10010101001110100110000'
+    from ui.binary import process_binary
+    expected = process_binary('TinyA5/1', key, '', '01000001')[0]
+    assert process_text('TinyA5/1', key, '', 'A', False) == f'{int(expected, 2):02x}'
+
+
+def test_shared_full_key_matches_binary_mode():
+    from ui.binary import process_binary
+    key, frame = 0x1223456789ABCDEF, 0x134
+    expected = process_binary('A5/1', format(key, '064b'), format(frame, '022b'), '01000001')[0]
+    assert process_text('A5/1', hex(key), hex(frame), 'A', False) == f'{int(expected, 2):02x}'
