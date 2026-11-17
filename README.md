@@ -68,18 +68,10 @@ Tại thư mục ngoài cùng của dự án, chạy:
 py run_gui.py
 ```
 
-Để mở giao diện Tkinter, chạy `py run_gui.py --desktop` (cần hỗ trợ Tkinter).
-
-**Chạy kiểm thử:** tại thư mục `ATBMTT-main/ATBMTT-main`:
+**Chạy kiểm thử:** tại `ATBMTT-main/ATBMTT-main`:
 
 ```powershell
 py -m pytest -q
-```
-
-Nếu đã cài Node.js, có thể kiểm thử lõi JavaScript bằng:
-
-```powershell
-node tests/web_core.cjs
 ```
 
 Khi chỉnh sửa mã nguồn web trong `ui/web/`, tạo lại giao diện HTML bằng:
@@ -102,8 +94,4 @@ git commit -m "docs: update installation instructions"
 git push
 ```
 
-Lưu ý: lịch sử commit chỉ phản ánh chính xác đóng góp cá nhân khi từng thành viên thực sự commit bằng thông tin tác giả của mình. Không dùng chung tài khoản nếu muốn giảng viên đánh giá đóng góp riêng.
-
 ---
-
-**Tài liệu bổ sung:** [Mô tả chi tiết giao diện web](ATBMTT-main/ATBMTT-main/docs/giao_dien_web.md).
